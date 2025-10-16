@@ -289,6 +289,12 @@ public class ContractController {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
         headers.setContentDispositionFormData("attachment", contractId + ".pdf");
+        
+        // Add CORS headers for file downloads
+        headers.add("Access-Control-Allow-Origin", "*");
+        headers.add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+        headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Trace-Id");
+        headers.add("Access-Control-Expose-Headers", "Content-Disposition, Content-Type, Content-Length");
 
         logger.info("PDF download initiated for contractId: {}", contractId);
 

@@ -30,7 +30,8 @@ public class WebConfig implements WebMvcConfigurer {
             .allowedOrigins(allowedOrigins)
             .allowedMethods(allowedMethods)
             .allowedHeaders(allowedHeaders)
-            .allowCredentials(allowCredentials);
+            .allowCredentials(allowCredentials)
+            .exposedHeaders("Content-Disposition", "Content-Type", "Content-Length");
 
         // Separate CORS configuration for API docs
         registry.addMapping("/api-docs/**")
