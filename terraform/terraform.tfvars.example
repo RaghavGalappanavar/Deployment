@@ -1,0 +1,43 @@
+# AWS Configuration
+aws_region = "ap-south-1"
+
+# Project Configuration
+project_name = "mb-otr"
+environment  = "dev"
+service_name = "contract-service"
+
+# Container Configuration
+image_tag     = "latest"
+desired_count = 1
+cpu           = 512
+memory        = 1024
+
+# Logging Configuration
+log_retention_days = 7
+
+# Database Configuration
+db_instance_class     = "db.t3.micro"
+db_allocated_storage  = 20
+db_name              = "contract_service_db"
+db_username          = "postgres"
+
+# S3 Configuration
+# Leave empty to auto-generate bucket name
+s3_bucket_name = ""
+
+# Kafka Configuration
+# Set these values based on your Kafka setup
+kafka_bootstrap_servers = "localhost:9092"
+kafka_topics           = ["contract-events"]
+
+# Example for MSK (Managed Streaming for Kafka):
+# kafka_bootstrap_servers = "b-1.your-cluster.kafka.ap-south-1.amazonaws.com:9092,b-2.your-cluster.kafka.ap-south-1.amazonaws.com:9092"
+
+# Example for production environment:
+# environment = "prod"
+# desired_count = 2
+# cpu = 1024
+# memory = 2048
+# db_instance_class = "db.t3.small"
+# db_allocated_storage = 100
+# log_retention_days = 30
