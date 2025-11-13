@@ -78,6 +78,14 @@ resource "aws_s3_bucket_lifecycle_configuration" "contracts" {
   }
 }
 
+# S3 bucket logging configuration
+resource "aws_s3_bucket_logging" "contracts" {
+  bucket = aws_s3_bucket.contracts.id
+
+  target_bucket = aws_s3_bucket.contracts.id
+  target_prefix = "access-logs/"
+}
+
 # S3 bucket notification for contract events (optional)
 resource "aws_s3_bucket_notification" "contracts" {
   bucket = aws_s3_bucket.contracts.id
@@ -86,29 +94,17 @@ resource "aws_s3_bucket_notification" "contracts" {
   depends_on = [aws_s3_bucket.contracts]
 }
 
-# IAM policy for S3 access
-resource "aws_iam_policy" "s3_access" {
-  name        = "${var.project_name}-${var.environment}-${local.service_name}-s3-access"
-  description = "IAM policy for Contract Service S3 access"
+# CloudWatch metric filter for S3 access monitoring
+resource "aws_cloudwatch_log_metric_filter" "s3_access" {
+  name           = "${var.project_name}-${var.environment}-${local.service_name}-s3-access"
+  log_group_name = aws_cloudwatch_log_group.app_logs.name
+  pattern        = "[timestamp, request_id, level=\"ERROR\", logger, message=\"*S3*\"]"
 
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:DeleteObject",
-          "s3:ListBucket"
-        ]
-        Resource = [
-          aws_s3_bucket.contracts.arn,
-          "${aws_s3_bucket.contracts.arn}/*"
-        ]
-      }
-    ]
-  })
-
-  tags = local.common_tags
+  metric_transformation {
+    name      = "S3AccessErrors"
+    namespace = "${var.project_name}/${var.environment}/${local.service_name}"
+    value     = "1"
+  }
 }
+
+

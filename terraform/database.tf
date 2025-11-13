@@ -1,7 +1,7 @@
 # Database subnet group
 resource "aws_db_subnet_group" "main" {
   name       = "${var.project_name}-${var.environment}-${local.service_name}-db-subnet-group"
-  subnet_ids = split(",", data.aws_ssm_parameter.private_subnet_ids.value)
+  subnet_ids = local.private_subnet_ids
 
   tags = merge(local.common_tags, {
     Name = "${var.project_name}-${var.environment}-${local.service_name}-db-subnet-group"
@@ -10,7 +10,7 @@ resource "aws_db_subnet_group" "main" {
 
 # Database parameter group
 resource "aws_db_parameter_group" "main" {
-  family = "postgres15"
+  family = "postgres16"
   name   = "${var.project_name}-${var.environment}-${local.service_name}-pg"
 
   parameter {
@@ -29,7 +29,7 @@ resource "aws_db_parameter_group" "main" {
 # Database security group
 resource "aws_security_group" "database" {
   name_prefix = "${var.project_name}-${var.environment}-${local.service_name}-db-"
-  vpc_id      = data.aws_ssm_parameter.vpc_id.value
+  vpc_id      = local.vpc_id
 
   ingress {
     from_port       = 5432
@@ -54,6 +54,12 @@ resource "aws_security_group" "database" {
 resource "random_password" "db_password" {
   length  = 16
   special = true
+
+  # Ensure password meets PostgreSQL requirements
+  min_lower   = 2
+  min_upper   = 2
+  min_numeric = 2
+  min_special = 2
 }
 
 # Store database password in SSM Parameter Store
@@ -71,7 +77,7 @@ resource "aws_db_instance" "main" {
 
   # Engine configuration
   engine         = "postgres"
-  engine_version = "15.4"
+  engine_version = "16.10"
   instance_class = var.db_instance_class
 
   # Storage configuration

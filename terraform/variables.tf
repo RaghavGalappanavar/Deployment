@@ -22,29 +22,7 @@ variable "service_name" {
   default     = "contract-service"
 }
 
-variable "image_tag" {
-  description = "Docker image tag"
-  type        = string
-  default     = "latest"
-}
 
-variable "desired_count" {
-  description = "Desired number of tasks"
-  type        = number
-  default     = 1
-}
-
-variable "cpu" {
-  description = "CPU units for the task"
-  type        = number
-  default     = 512
-}
-
-variable "memory" {
-  description = "Memory for the task"
-  type        = number
-  default     = 1024
-}
 
 variable "log_retention_days" {
   description = "CloudWatch log retention in days"
@@ -98,3 +76,41 @@ variable "kafka_topics" {
     "contract-events"
   ]
 }
+
+variable "fargate_cpu" {
+  description = "Fargate instance CPU units"
+  type        = number
+  default     = 512
+}
+
+variable "fargate_memory" {
+  description = "Fargate instance memory"
+  type        = number
+  default     = 1024
+}
+
+variable "app_port" {
+  description = "Port exposed by the docker image"
+  type        = number
+  default     = 8085
+}
+
+variable "app_count" {
+  description = "Number of docker containers to run"
+  type        = number
+  default     = 1
+}
+
+variable "health_check_path" {
+  description = "Health check path"
+  type        = string
+  default     = "/api/contract/actuator/health"
+}
+
+variable "ecr_image_tag" {
+  description = "ECR image tag"
+  type        = string
+  default     = "latest"
+}
+
+# Removed create_load_balancer variable - always use shared ALB from core infrastructure

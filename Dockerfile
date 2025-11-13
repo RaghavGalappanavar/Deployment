@@ -23,8 +23,8 @@ RUN mvn clean package -DskipTests -B
 FROM --platform=linux/amd64 eclipse-temurin:17-jre-alpine
 
 # Create non-root user for security
-RUN addgroup -g 1001 -S appgroup && \
-    adduser -u 1001 -S appuser -G appgroup
+RUN groupadd -g 1001 appgroup && \
+    useradd -u 1001 -g appgroup -m appuser
 
 # Set working directory
 WORKDIR /app
@@ -47,7 +47,7 @@ EXPOSE 8085
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:8085/api/contract/health/live || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8085/api/contract/actuator/health || exit 1
 
 # Set JVM options for container environment
 ENV JAVA_OPTS="-Xmx512m -Xms256m -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"

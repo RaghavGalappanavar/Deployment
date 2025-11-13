@@ -37,6 +37,12 @@ This Terraform configuration deploys a production-ready Contract Service on AWS 
 - **S3 Bucket**: Secure contract document storage with lifecycle policies
 - **Parameter Store**: Secure storage for database credentials and configuration
 
+### Shared Resources (from Core Infrastructure)
+- **VPC & Networking**: Shared VPC, subnets, and security groups
+- **ECS Cluster**: Shared ECS cluster for container orchestration
+- **Application Load Balancer**: Shared ALB with listener rules
+- **Kafka Cluster**: Shared Kafka infrastructure for event streaming
+
 ### Monitoring & Logging
 - **CloudWatch Logs**: Centralized application logging with 7-day retention
 - **RDS Enhanced Monitoring**: Database performance metrics
@@ -50,8 +56,7 @@ This Terraform configuration deploys a production-ready Contract Service on AWS 
 
 - **Terraform** >= 1.2.0
 - **AWS CLI** configured with appropriate credentials
-- **Shared Infrastructure**: VPC, ECS cluster, and load balancer must exist
-- **ECR Repository**: Container image repository must be available
+- **Shared Infrastructure**: VPC, ECS cluster, load balancer, and ECR repository must exist
 
 ## Configuration
 
@@ -62,11 +67,14 @@ The following parameters must exist in AWS Systems Manager Parameter Store:
 /${project_name}/${environment}/private_subnet_ids
 /${project_name}/${environment}/ecs_cluster_name
 /${project_name}/${environment}/ecs_task_execution_role_arn
-/${project_name}/${environment}/ecs_task_role_arn
 /${project_name}/${environment}/ecs_security_group_id
-/${project_name}/${environment}/database_security_group_id
-/${project_name}/${environment}/${service_name}/target_group_arn
-/${project_name}/${environment}/${service_name}/ecr_repository_url
+```
+
+### Optional SSM Parameters
+These parameters are required for shared infrastructure integration:
+```
+/${project_name}/${environment}/kafka_bootstrap_servers
+/${project_name}/${environment}/http_listener_arn
 ```
 
 ### Key Variables
@@ -78,10 +86,10 @@ project_name  = "mb-otr"
 service_name  = "contract-service"
 
 # Container Configuration
-image_tag     = "latest"
-cpu           = 512
-memory        = 1024
-desired_count = 1
+ecr_image_tag  = "latest"
+fargate_cpu    = 512
+fargate_memory = 1024
+app_count      = 1
 
 # Database Configuration
 db_instance_class     = "db.t3.micro"
@@ -92,6 +100,8 @@ db_username          = "postgres"
 # Kafka Configuration
 kafka_bootstrap_servers = "your-kafka-servers"
 kafka_topics           = ["contract-events"]
+
+# Note: Using shared ALB from core infrastructure
 ```
 
 ## Deployment
@@ -117,12 +127,41 @@ terraform plan
 terraform apply
 ```
 
+### 5. Build and Deploy Application
+```bash
+# Get ECR repository URL
+ECR_REPO=$(terraform output -raw ecr_repository_url)
+
+# Login to ECR
+aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin $ECR_REPO
+
+# Build and push Docker image
+docker build -t $ECR_REPO:latest .
+docker push $ECR_REPO:latest
+
+# Update ECS service to deploy new image
+aws ecs update-service \
+  --cluster $(terraform output -raw ecs_service_name | cut -d'/' -f1) \
+  --service $(terraform output -raw ecs_service_name) \
+  --force-new-deployment
+```
+
+**Alternative**: Use the pre-built commands from Terraform outputs:
+```bash
+# Get ECR push commands
+terraform output -raw ecr_push_commands
+
+# Get service update command
+terraform output -raw update_service_command
+```
+
 ## Resources Created
 
 ### ECS Resources
 - ECS Task Definition with container configuration
 - ECS Service with load balancer integration
 - CloudWatch Log Group for application logs
+- ECR Repository with lifecycle policies
 
 ### Database Resources
 - RDS PostgreSQL instance with encryption
@@ -143,8 +182,8 @@ terraform apply
 
 ## Application Endpoints
 
-- **Service API**: `/api/contracts`
-- **Health Check**: `/actuator/health`
+- **Service API**: `/api/contract/*` (routed via shared ALB)
+- **Health Check**: `/api/contract/actuator/health`
 - **Port**: 8085
 
 ## Environment Variables
