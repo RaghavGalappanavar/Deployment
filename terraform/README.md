@@ -139,8 +139,8 @@ ECR_REPO=$(terraform output -raw ecr_repository_url)
 # Login to ECR
 aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin $ECR_REPO
 
-# Build and push Docker image
-docker build -t $ECR_REPO:latest .
+# Build and push Docker image (with platform specification for multi-arch support)
+docker build --platform linux/amd64 -t $ECR_REPO:latest .
 docker push $ECR_REPO:latest
 
 # Update ECS service to deploy new image
