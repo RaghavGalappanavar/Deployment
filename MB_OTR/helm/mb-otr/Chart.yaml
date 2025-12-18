@@ -1,0 +1,51 @@
+apiVersion: v2
+name: mb-otr
+description: A Helm chart for MB OTR (On-The-Road) microservices application
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+home: https://github.com/your-org/mb-otr
+sources:
+  - https://github.com/your-org/mb-otr
+maintainers:
+  - name: MB OTR Team
+    email: team@mb-otr.com
+
+keywords:
+  - microservices
+  - spring-boot
+  - react
+  - kafka
+  - postgresql
+
+dependencies:
+  - name: dealservice
+    version: "0.1.0"
+    condition: dealservice.enabled
+  - name: mockservice
+    version: "0.1.0"
+    condition: mockservice.enabled
+  - name: purchaserequestservice
+    version: "0.1.0"
+    condition: purchaserequestservice.enabled
+  - name: contractservice
+    version: "0.1.0"
+    condition: contractservice.enabled
+  - name: orderplacementservice
+    version: "0.1.0"
+    condition: orderplacementservice.enabled
+  - name: frontend
+    version: "0.1.0"
+    condition: frontend.enabled
+  - name: postgresql
+    version: "12.12.10"
+    repository: https://charts.bitnami.com/bitnami
+    condition: postgresql.enabled
+  - name: kafka
+    version: "25.3.5"
+    repository: https://charts.bitnami.com/bitnami
+    condition: kafka.enabled
+
+annotations:
+  category: Application
+  licenses: Apache-2.0

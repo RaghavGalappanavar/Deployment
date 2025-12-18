@@ -1,0 +1,20 @@
+# Default values for mockservice
+replicaCount: 1
+namespace: mb
+
+image:
+  repository: 898060563170.dkr.ecr.ap-south-1.amazonaws.com/mock-service
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+service:
+  type: ClusterIP
+  port: 8084
+  targetPort: 8084
+
+# Application specific configuration
+config:
+  profiles:
+    active: "prod"
+  
+  javaOpts: "-Xmx256m -Xms128m"

@@ -1,0 +1,56 @@
+1. Get the application URL by running these commands:
+{{- if .Values.ingress.enabled }}
+{{- range $host := .Values.ingress.hosts }}
+  {{- range .paths }}
+  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ $host.host }}{{ .path }}
+  {{- end }}
+{{- end }}
+{{- else if contains "NodePort" .Values.frontend.service.type }}
+  export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "mb-otr.fullname" . }}-frontend)
+  export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo http://$NODE_IP:$NODE_PORT
+{{- else if contains "LoadBalancer" .Values.frontend.service.type }}
+     NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+           You can watch the status of by running 'kubectl get --namespace {{ .Release.Namespace }} svc -w {{ include "mb-otr.fullname" . }}-frontend'
+  export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "mb-otr.fullname" . }}-frontend --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
+  echo http://$SERVICE_IP:{{ .Values.frontend.service.port }}
+{{- else if contains "ClusterIP" .Values.frontend.service.type }}
+  export POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "mb-otr.name" . }}-frontend,app.kubernetes.io/instance={{ .Release.Name }}" -o jsonpath="{.items[0].metadata.name}")
+  export CONTAINER_PORT=$(kubectl get pod --namespace {{ .Release.Namespace }} $POD_NAME -o jsonpath="{.spec.containers[0].ports[0].containerPort}")
+  echo "Visit http://127.0.0.1:8080 to use your application"
+  kubectl --namespace {{ .Release.Namespace }} port-forward $POD_NAME 8080:$CONTAINER_PORT
+{{- end }}
+
+2. Service endpoints:
+{{- if .Values.dealservice.enabled }}
+   - Deal Service: http://{{ include "mb-otr.fullname" . }}-dealservice:{{ .Values.dealservice.service.port }}
+{{- end }}
+{{- if .Values.mockservice.enabled }}
+   - Mock Service: http://{{ include "mb-otr.fullname" . }}-mockservice:{{ .Values.mockservice.service.port }}
+{{- end }}
+{{- if .Values.purchaserequestservice.enabled }}
+   - Purchase Request Service: http://{{ include "mb-otr.fullname" . }}-purchaserequestservice:{{ .Values.purchaserequestservice.service.port }}
+{{- end }}
+{{- if .Values.contractservice.enabled }}
+   - Contract Service: http://{{ include "mb-otr.fullname" . }}-contractservice:{{ .Values.contractservice.service.port }}
+{{- end }}
+{{- if .Values.orderplacementservice.enabled }}
+   - Order Placement Service: http://{{ include "mb-otr.fullname" . }}-orderplacementservice:{{ .Values.orderplacementservice.service.port }}
+{{- end }}
+
+3. Infrastructure services:
+{{- if .Values.postgresql.enabled }}
+   - PostgreSQL: {{ .Release.Name }}-postgresql:5432
+{{- end }}
+{{- if .Values.kafka.enabled }}
+   - Kafka: {{ .Release.Name }}-kafka:9092
+{{- end }}
+
+4. To check the status of all services:
+   kubectl get pods,svc -n {{ .Release.Namespace }}
+
+5. To view logs for a specific service:
+   kubectl logs -f deployment/{{ include "mb-otr.fullname" . }}-<service-name> -n {{ .Release.Namespace }}
+
+6. To scale a service:
+   kubectl scale deployment {{ include "mb-otr.fullname" . }}-<service-name> --replicas=<number> -n {{ .Release.Namespace }}

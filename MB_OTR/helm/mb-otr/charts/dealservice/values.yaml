@@ -1,0 +1,31 @@
+# Default values for dealservice
+replicaCount: 1
+namespace: mb
+
+image:
+  repository: 898060563170.dkr.ecr.ap-south-1.amazonaws.com/deal-service
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+service:
+  type: ClusterIP
+  port: 8080
+  targetPort: 8080
+
+# Application specific configuration
+config:
+  profiles:
+    active: "prod"
+  
+  database:
+    url: "jdbc:postgresql://postgresql:5432/dealservice"
+    username: "postgres"
+    password: "password"
+
+  kafka:
+    bootstrapServers: "kafka:9092"
+
+  mockService:
+    baseUrl: "http://mockservice:8084"
+  
+  javaOpts: "-Xmx512m -Xms256m"

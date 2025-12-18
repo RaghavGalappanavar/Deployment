@@ -1,0 +1,28 @@
+# Default values for orderplacementservice
+replicaCount: 1
+namespace: mb
+
+image:
+  repository: 898060563170.dkr.ecr.ap-south-1.amazonaws.com/order-placement-service
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+service:
+  type: ClusterIP
+  port: 8086
+  targetPort: 8086
+
+# Application specific configuration
+config:
+  profiles:
+    active: "prod"
+  
+  database:
+    url: "jdbc:postgresql://postgresql.mb-infra.svc.cluster.local:5432/orderplacementservice"
+    username: "postgres"
+    password: "password"
+
+  kafka:
+    bootstrapServers: "kafka.mb-infra.svc.cluster.local:9092"
+  
+  javaOpts: "-Xmx512m -Xms256m"

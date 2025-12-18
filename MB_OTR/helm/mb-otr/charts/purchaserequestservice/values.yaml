@@ -1,0 +1,28 @@
+# Default values for purchaserequestservice
+replicaCount: 1
+namespace: mb
+
+image:
+  repository: 898060563170.dkr.ecr.ap-south-1.amazonaws.com/purchase-request-service
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+service:
+  type: ClusterIP
+  port: 8082
+  targetPort: 8082
+
+# Application specific configuration
+config:
+  profiles:
+    active: "prod"
+  
+  database:
+    url: "jdbc:postgresql://postgresql:5432/purchaserequestservice"
+    username: "postgres"
+    password: "password"
+
+  kafka:
+    bootstrapServers: "kafka:9092"
+  
+  javaOpts: "-Xmx512m -Xms256m"

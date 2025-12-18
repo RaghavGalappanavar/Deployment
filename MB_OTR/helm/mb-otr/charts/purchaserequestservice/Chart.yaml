@@ -1,0 +1,22 @@
+apiVersion: v2
+name: purchaserequestservice
+description: A Helm chart for Purchase Request Service - handles purchase request processing
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+home: https://github.com/your-org/mb-otr
+sources:
+  - https://github.com/your-org/mb-otr/tree/main/purchaseRequestService
+maintainers:
+  - name: MB OTR Team
+    email: team@mb-otr.com
+
+keywords:
+  - spring-boot
+  - purchase-request-service
+  - microservice
+  - java
+
+annotations:
+  category: Application
+  licenses: Apache-2.0

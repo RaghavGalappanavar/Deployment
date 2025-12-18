@@ -1,0 +1,27 @@
+dependencies:
+- name: dealservice
+  repository: ""
+  version: 0.1.0
+- name: mockservice
+  repository: ""
+  version: 0.1.0
+- name: purchaserequestservice
+  repository: ""
+  version: 0.1.0
+- name: contractservice
+  repository: ""
+  version: 0.1.0
+- name: orderplacementservice
+  repository: ""
+  version: 0.1.0
+- name: frontend
+  repository: ""
+  version: 0.1.0
+- name: postgresql
+  repository: https://charts.bitnami.com/bitnami
+  version: 12.12.10
+- name: kafka
+  repository: https://charts.bitnami.com/bitnami
+  version: 25.3.5
+digest: sha256:05122097c4d9dbca0aaf66500ac09350c5d922ac2871cbd555224e08256ca1b3
+generated: "2025-12-16T19:22:17.553093+05:30"

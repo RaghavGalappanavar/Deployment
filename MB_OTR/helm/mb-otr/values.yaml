@@ -1,0 +1,110 @@
+# Global configuration
+global:
+  imageRegistry: ""
+
+# Service configurations
+dealservice:
+  enabled: true
+  service:
+    type: ClusterIP
+    port: 8080
+  config:
+    database:
+      url: "jdbc:postgresql://mb-otr-postgresql:5432/dealservice"
+      username: "postgres"
+      password: "password"
+    kafka:
+      bootstrapServers: "mb-otr-kafka:9092"
+
+mockservice:
+  enabled: true
+  service:
+    type: ClusterIP
+    port: 8080
+
+purchaserequestservice:
+  enabled: true
+  service:
+    type: ClusterIP
+    port: 8080
+  config:
+    database:
+      url: "jdbc:postgresql://mb-otr-postgresql:5432/purchaserequestservice"
+      username: "postgres"
+      password: "password"
+    kafka:
+      bootstrapServers: "mb-otr-kafka:9092"
+
+contractservice:
+  enabled: true
+  service:
+    type: ClusterIP
+    port: 8080
+  config:
+    database:
+      url: "jdbc:postgresql://mb-otr-postgresql:5432/contractservice"
+      username: "postgres"
+      password: "password"
+    kafka:
+      bootstrapServers: "mb-otr-kafka:9092"
+
+orderplacementservice:
+  enabled: true
+  service:
+    type: ClusterIP
+    port: 8080
+  config:
+    database:
+      url: "jdbc:postgresql://mb-otr-postgresql:5432/orderplacementservice"
+      username: "postgres"
+      password: "password"
+    kafka:
+      bootstrapServers: "mb-otr-kafka:9092"
+
+frontend:
+  enabled: true
+  service:
+    type: ClusterIP
+    port: 80
+
+# Ingress configuration
+ingress:
+  enabled: false
+  hosts: []
+  tls: false
+
+# Infrastructure dependencies
+postgresql:
+  enabled: true
+  image:
+    repository: "postgres"
+    tag: "15"
+  auth:
+    postgresPassword: "password"
+    database: "dealservice"
+  primary:
+    persistence:
+      enabled: true
+      storageClass: "gp2"
+      size: 8Gi
+    nodeSelector:
+      role: mbotr
+
+kafka:
+  enabled: true
+  image:
+    repository: "confluentinc/cp-kafka"
+    tag: "7.4.0"
+  persistence:
+    enabled: true
+    storageClass: "gp2"
+    size: 8Gi
+  broker:
+    nodeSelector:
+      role: mbotr
+  controller:
+    nodeSelector:
+      role: mbotr
+  zookeeper:
+    nodeSelector:
+      role: mbotr

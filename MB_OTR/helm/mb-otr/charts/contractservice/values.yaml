@@ -1,0 +1,25 @@
+# Default values for contractservice
+replicaCount: 1
+namespace: mb
+
+image:
+  repository: 898060563170.dkr.ecr.ap-south-1.amazonaws.com/contract-service
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+service:
+  type: ClusterIP
+  port: 8085
+  targetPort: 8085
+
+# Application specific configuration
+config:
+  profiles:
+    active: "prod"
+  
+  database:
+    url: "jdbc:postgresql://postgresql:5432/contractservice"
+    username: "postgres"
+    password: "password"
+  
+  javaOpts: "-Xmx256m -Xms128m"
