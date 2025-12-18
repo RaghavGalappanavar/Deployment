@@ -1,116 +1,82 @@
+# Variables for the microservices infrastructure
+
 variable "aws_region" {
-  description = "AWS region"
+  description = "AWS region for resources"
   type        = string
   default     = "ap-south-1"
 }
 
-variable "environment" {
-  description = "Environment name"
+variable "vpc_cidr" {
+  description = "CIDR block for VPC"
   type        = string
-  default     = "dev"
+  default     = "10.0.0.0/16"
 }
 
-variable "project_name" {
-  description = "Project name"
-  type        = string
-  default     = "mb-otr"
-}
-
-variable "service_name" {
-  description = "Service name"
-  type        = string
-  default     = "contract-service"
-}
-
-
-
-variable "log_retention_days" {
-  description = "CloudWatch log retention in days"
-  type        = number
-  default     = 7
-}
-
-# Database variables
-variable "db_instance_class" {
-  description = "RDS instance class"
-  type        = string
-  default     = "db.t3.micro"
-}
-
-variable "db_allocated_storage" {
-  description = "RDS allocated storage in GB"
-  type        = number
-  default     = 20
-}
-
-variable "db_name" {
-  description = "Database name"
-  type        = string
-  default     = "contract_service_db"
-}
-
-variable "db_username" {
-  description = "Database username"
-  type        = string
-  default     = "postgres"
-}
-
-# S3 variables
-variable "s3_bucket_name" {
-  description = "S3 bucket name for contract storage (leave empty for auto-generated)"
-  type        = string
-  default     = ""
-}
-
-# Kafka variables
-variable "kafka_bootstrap_servers" {
-  description = "Kafka bootstrap servers"
-  type        = string
-  default     = ""
-}
-
-variable "kafka_topics" {
-  description = "Kafka topics used by the application"
+variable "public_subnet_cidrs" {
+  description = "CIDR blocks for public subnets"
   type        = list(string)
-  default     = [
-    "contract-events"
+  default     = ["10.0.1.0/24", "10.0.2.0/24"]
+}
+
+variable "private_subnet_cidrs" {
+  description = "CIDR blocks for private subnets"
+  type        = list(string)
+  default     = ["10.0.10.0/24", "10.0.11.0/24"]
+}
+
+variable "cluster_name" {
+  description = "Name of the EKS cluster"
+  type        = string
+  default     = "microservices-cluster"
+}
+
+variable "cluster_version" {
+  description = "Kubernetes version for EKS cluster"
+  type        = string
+  default     = "1.34"
+}
+
+variable "node_group_config" {
+  description = "Configuration for EKS node group"
+  type = object({
+    instance_types = list(string)
+    capacity_type  = string
+    scaling_config = object({
+      desired_size = number
+      max_size     = number
+      min_size     = number
+    })
+  })
+  default = {
+    instance_types = ["t3.medium"]
+    capacity_type  = "ON_DEMAND"
+    scaling_config = {
+      desired_size = 2
+      max_size     = 4
+      min_size     = 1
+    }
+  }
+}
+
+variable "microservice_repositories" {
+  description = "List of microservice ECR repositories to create"
+  type        = list(string)
+  default = [
+    "contract-service",
+    "deal-service",
+    "order-placement-service",
+    "mock-service",
+    "purchase-request-service",
+    "mb-frontend"
   ]
 }
 
-variable "fargate_cpu" {
-  description = "Fargate instance CPU units"
-  type        = number
-  default     = 512
+variable "common_tags" {
+  description = "Common tags to apply to all resources"
+  type        = map(string)
+  default = {
+    Environment = "dev"
+    Project     = "microservices"
+    ManagedBy   = "terraform"
+  }
 }
-
-variable "fargate_memory" {
-  description = "Fargate instance memory"
-  type        = number
-  default     = 1024
-}
-
-variable "app_port" {
-  description = "Port exposed by the docker image"
-  type        = number
-  default     = 8085
-}
-
-variable "app_count" {
-  description = "Number of docker containers to run"
-  type        = number
-  default     = 1
-}
-
-variable "health_check_path" {
-  description = "Health check path"
-  type        = string
-  default     = "/api/contract/actuator/health"
-}
-
-variable "ecr_image_tag" {
-  description = "ECR image tag"
-  type        = string
-  default     = "latest"
-}
-
-# Removed create_load_balancer variable - always use shared ALB from core infrastructure

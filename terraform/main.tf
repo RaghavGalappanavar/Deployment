@@ -1,95 +1,57 @@
+# Main Terraform configuration for microservices EKS deployment
 terraform {
-  required_version = ">= 1.2.0"
-
+  required_version = ">= 1.0"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.1"
-    }
-  }
-
-  backend "s3" {
-#    bucket         = "mb-otr-applications-terraform-state-bucket"
-#    key            = "contract-service/terraform.tfstate"
-#    region         = "ap-south-1"
-#    dynamodb_table = "terraform-locks"
-#    encrypt        = true
   }
 }
 
+# Configure AWS Provider
 provider "aws" {
   region = var.aws_region
-
-  default_tags {
-    tags = local.common_tags
-  }
 }
 
-# Data sources to retrieve shared infrastructure values from SSM (from shared infrastructure)
-data "aws_ssm_parameter" "vpc_id" {
-  name = "/${var.project_name}/${var.environment}/vpc_id"
+# Data sources
+data "aws_availability_zones" "available" {
+  state = "available"
 }
 
-data "aws_ssm_parameter" "private_subnet_ids" {
-  name = "/${var.project_name}/${var.environment}/private_subnets"
+# VPC Module
+module "vpc" {
+  source = "./modules/vpc"
+
+  vpc_cidr             = var.vpc_cidr
+  availability_zones   = slice(data.aws_availability_zones.available.names, 0, 2)
+  public_subnet_cidrs  = var.public_subnet_cidrs
+  private_subnet_cidrs = var.private_subnet_cidrs
+
+  tags = var.common_tags
 }
 
-data "aws_ssm_parameter" "ecs_cluster_name" {
-  name = "/${var.project_name}/${var.environment}/ecs_cluster_name"
+# EKS Module
+module "eks" {
+  source = "./modules/eks"
+
+  cluster_name    = var.cluster_name
+  cluster_version = var.cluster_version
+  vpc_id          = module.vpc.vpc_id
+  subnet_ids      = concat(module.vpc.private_subnet_ids, module.vpc.public_subnet_ids)
+
+  node_group_config = var.node_group_config
+
+  tags = var.common_tags
 }
 
-data "aws_ssm_parameter" "ecs_task_execution_role_arn" {
-  name = "/${var.project_name}/${var.environment}/ecs_task_execution_role_arn"
-}
+# ECR repositories for microservices
+module "ecr" {
+  source = "./modules/ecr"
 
-data "aws_ssm_parameter" "ecs_security_group_id" {
-  name = "/${var.project_name}/${var.environment}/ecs_security_group_id"
-}
+  repositories = var.microservice_repositories
 
-# Optional SSM parameters - these may not exist in all environments
-data "aws_ssm_parameter" "kafka_bootstrap_servers" {
-  count = var.kafka_bootstrap_servers == "" ? 1 : 0
-  name  = "/${var.project_name}/${var.environment}/kafka_bootstrap_brokers"
-}
-
-data "aws_ssm_parameter" "http_listener_arn" {
-  name = "/${var.project_name}/${var.environment}/http_listener_arn"
-}
-
-# ECR repository URL will be provided by ecr.tf
-
-locals {
-  service_name = var.service_name
-
-  # Use shared Kafka from shared infrastructure or variable
-  kafka_bootstrap_servers = var.kafka_bootstrap_servers != "" ? var.kafka_bootstrap_servers : (
-    length(data.aws_ssm_parameter.kafka_bootstrap_servers) > 0 ?
-    data.aws_ssm_parameter.kafka_bootstrap_servers[0].value :
-    "localhost:9092"
-  )
-
-  common_tags = {
-    Project     = var.project_name
-    Environment = var.environment
-    Service     = local.service_name
-    ManagedBy   = "terraform"
-  }
-
-  # Use shared infrastructure from shared resources
-  ecs_task_execution_role_arn = data.aws_ssm_parameter.ecs_task_execution_role_arn.value
-  ecs_cluster_arn = data.aws_ssm_parameter.ecs_cluster_name.value
-  ecs_security_group_id = data.aws_ssm_parameter.ecs_security_group_id.value
-  private_subnet_ids = split(",", data.aws_ssm_parameter.private_subnet_ids.value)
-  vpc_id = data.aws_ssm_parameter.vpc_id.value
-
-  # Use existing ALB listener ARN from shared infrastructure
-  http_listener_arn = data.aws_ssm_parameter.http_listener_arn.value
-
-  ecr_repository_url = aws_ecr_repository.contract_service.repository_url
+  tags = var.common_tags
 }
 
 
